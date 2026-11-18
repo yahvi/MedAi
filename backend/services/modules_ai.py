@@ -15,7 +15,11 @@ from pydantic import BaseModel, Field
 
 from config import Config
 from services.clinical_rules import _extract_number, _parse_range, evaluate_clinical_alerts
-from services.gemini_service import _format_report_context, _get_client, is_gemini_configured
+from services.gemini_service import (
+    _format_report_context,
+    create_interaction_with_fallback,
+    is_gemini_configured,
+)
 
 
 # Mandatory exact disclaimer from the MedAi Implementation Plan (Module 10)
@@ -180,8 +184,7 @@ def analyze_prescription(file_bytes: bytes, mime_type: str, file_name: str) -> D
         "and instruct the patient to confirm with their doctor or pharmacist rather than guessing."
     )
 
-    client = _get_client()
-    interaction = client.interactions.create(
+    interaction = create_interaction_with_fallback(
         model=Config.GEMINI_MODEL,
         system_instruction=PRESCRIPTION_SYSTEM_INSTRUCTION,
         input=[{"type": "text", "text": prompt}, media_block],
@@ -718,8 +721,7 @@ def generate_lifestyle_plan(profile: Dict[str, Any], report: Optional[Dict[str, 
         "Respond in structured JSON with clear English and Hindi fields."
     )
 
-    client = _get_client()
-    interaction = client.interactions.create(
+    interaction = create_interaction_with_fallback(
         model=Config.GEMINI_MODEL,
         system_instruction=LIFESTYLE_SYSTEM_INSTRUCTION,
         input=prompt,
@@ -877,8 +879,7 @@ def lookup_medical_term(query: str, user_reports: List[Dict[str, Any]]) -> Dict[
             }
 
     if is_gemini_configured():
-        client = _get_client()
-        interaction = client.interactions.create(
+        interaction = create_interaction_with_fallback(
             model=Config.GEMINI_MODEL,
             system_instruction=(
                 "You are MedAi's Medical Dictionary. Explain medical terms and clinical abbreviations "
@@ -1007,8 +1008,7 @@ def generate_doctor_prep(
         "organized patient concerns, and a visit checklist. Do NOT diagnose or prescribe."
     )
 
-    client = _get_client()
-    interaction = client.interactions.create(
+    interaction = create_interaction_with_fallback(
         model=Config.GEMINI_MODEL,
         system_instruction=(
             "You are MedAi's Doctor Visit Preparation assistant. Organize the patient's report findings and "

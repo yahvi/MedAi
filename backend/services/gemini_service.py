@@ -95,6 +95,48 @@ def _get_client():
     return genai.Client(api_key=Config.GEMINI_API_KEY)
 
 
+FALLBACK_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
+
+
+def create_interaction_with_fallback(**kwargs: Any) -> Any:
+    """
+    Calls client.interactions.create with Config.GEMINI_MODEL first, and automatically
+    falls back to current high-availability Flash-Lite models on temporary 503/429 demand spikes.
+    """
+    client = _get_client()
+    primary = kwargs.pop("model", None) or Config.GEMINI_MODEL
+    candidates = [primary] + [m for m in FALLBACK_MODELS if m != primary]
+
+    last_exc: Optional[Exception] = None
+    for idx, model_name in enumerate(candidates):
+        call_kwargs = dict(kwargs)
+        call_kwargs["model"] = model_name
+        # previous_interaction_id may be tied to the prior model; drop on fallback switch
+        if idx > 0:
+            call_kwargs.pop("previous_interaction_id", None)
+        try:
+            return client.interactions.create(**call_kwargs)
+        except Exception as exc:
+            msg = str(exc).lower()
+            transient = any(
+                k in msg
+                for k in (
+                    "503",
+                    "429",
+                    "high demand",
+                    "service_unavailable",
+                    "unavailable",
+                    "overloaded",
+                    "resource_exhausted",
+                )
+            )
+            last_exc = exc
+            if not transient or idx == len(candidates) - 1:
+                raise
+            print(f"[MedAi] {model_name} busy ({exc}); falling back to {candidates[idx + 1]}...")
+    raise last_exc  # type: ignore[misc]
+
+
 def _build_demo_report_analysis(file_name: str, variant: str = "standard") -> Dict[str, Any]:
     """Produces a realistic, rich sample analysis so users can test all Phase 1 workflows immediately."""
     if variant == "urgent_demo":
@@ -357,8 +399,7 @@ def analyze_medical_report(
         "and simplified explanations of complex medical terms found in the report."
     )
 
-    client = _get_client()
-    interaction = client.interactions.create(
+    interaction = create_interaction_with_fallback(
         model=Config.GEMINI_MODEL,
         system_instruction=REPORT_ANALYSIS_SYSTEM_INSTRUCTION,
         input=[
@@ -535,7 +576,6 @@ def chat_with_dr_sehat(
     if report_context:
         turn_system_instruction += f"\n\n{report_context}"
 
-    client = _get_client()
     kwargs: Dict[str, Any] = {
         "model": Config.GEMINI_MODEL,
         "system_instruction": turn_system_instruction,
@@ -544,7 +584,6 @@ def chat_with_dr_sehat(
     if previous_interaction_id:
         kwargs["previous_interaction_id"] = previous_interaction_id
     elif recent_history:
-        # Include recent transcript if resuming without a server interaction ID
         transcript_lines = []
         for h in recent_history[-8:]:
             speaker = "Patient" if h.get("role") == "user" else "Dr. Sehat"
@@ -552,7 +591,7 @@ def chat_with_dr_sehat(
         transcript_lines.append(f"Patient: {message}")
         kwargs["input"] = "\n".join(transcript_lines)
 
-    interaction = client.interactions.create(**kwargs)
+    interaction = create_interaction_with_fallback(**kwargs)
     return {
         "reply": interaction.output_text or "",
         "interaction_id": getattr(interaction, "id", None),

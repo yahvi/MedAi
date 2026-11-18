@@ -71,7 +71,7 @@ def create_app() -> Flask:
                 "firebase_enabled": storage_mod.firebase_enabled,
                 "gemini_configured": is_gemini_configured(),
                 "gemini_model": Config.GEMINI_MODEL,
-                "supported_languages": ["en", "hi"],
+                "supported_languages": ["en", "hi", "hinglish"],
                 "planned_languages": ["mr", "gu"],
                 "modules": [
                     "UI & Auth",

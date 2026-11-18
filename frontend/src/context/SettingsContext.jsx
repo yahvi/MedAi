@@ -72,6 +72,13 @@ export function SettingsProvider({ children }) {
     updatePreferences({ theme: nextTheme }, false);
   };
 
+  const cycleLanguage = (syncToServer = true) => {
+    const order = ['en', 'hi', 'hinglish'];
+    const idx = order.indexOf(prefs.language);
+    const nextLang = order[(idx + 1) % order.length];
+    updatePreferences({ language: nextLang }, syncToServer);
+  };
+
   const hydrateFromServer = (serverPrefs) => {
     if (serverPrefs) {
       setPrefs((prev) => ({ ...prev, ...serverPrefs }));
@@ -88,6 +95,7 @@ export function SettingsProvider({ children }) {
         theme: prefs.theme || 'lavender-blue',
         t,
         updatePreferences,
+        cycleLanguage,
         toggleTheme,
         hydrateFromServer,
       }}

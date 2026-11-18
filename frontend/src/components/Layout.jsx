@@ -24,7 +24,7 @@ import ThemeSwitcher from './ThemeSwitcher';
 
 export default function Layout({ activePage, onNavigate, children }) {
   const { user, logout } = useAuth();
-  const { language, t, updatePreferences } = useSettings();
+  const { language, t, cycleLanguage } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const primaryItems = [
@@ -45,8 +45,11 @@ export default function Layout({ activePage, onNavigate, children }) {
   };
 
   const toggleLanguage = () => {
-    updatePreferences({ language: language === 'en' ? 'hi' : 'en' });
+    cycleLanguage(true);
   };
+
+  const langBadge =
+    language === 'hi' ? 'हिन्दी' : language === 'hinglish' ? 'Hinglish' : 'EN';
 
   const MobileDrawer = (
     <div
@@ -297,10 +300,10 @@ export default function Layout({ activePage, onNavigate, children }) {
                   borderColor: 'var(--border-strong)',
                   color: 'var(--brand-primary)',
                 }}
-                title="Switch Language (English / Hindi)"
+                title="Switch Language: English / हिन्दी / Hinglish"
               >
                 <Globe className="h-3.5 w-3.5" />
-                <span>{language === 'en' ? 'EN → हिन्दी' : 'हिन्दी → EN'}</span>
+                <span>{langBadge}</span>
               </button>
 
               <div

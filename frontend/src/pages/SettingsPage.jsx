@@ -80,7 +80,7 @@ export default function SettingsPage() {
           <h2 className="text-base font-bold text-slate-900">{t.settings.languageSection}</h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-3 gap-3">
           {SUPPORTED_LANGUAGES.map((lang) => {
             const active = prefs.language === lang.code;
             return (

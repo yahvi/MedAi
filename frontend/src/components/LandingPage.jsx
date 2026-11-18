@@ -20,9 +20,11 @@ import { useSettings } from '../context/SettingsContext';
 import ThemeSwitcher from './ThemeSwitcher';
 
 export default function LandingPage({ onOpenLogin, onOpenSignup, onDemoLogin, demoBusy }) {
-  const { language, theme, t, updatePreferences } = useSettings();
+  const { language, theme, t, cycleLanguage } = useSettings();
   const isHi = language === 'hi';
+  const isHinglish = language === 'hinglish';
   const isSkyPeach = theme === 'lavender-blue';
+  const langLabel = isHi ? 'हिन्दी' : isHinglish ? 'Hinglish' : 'English';
 
   const features = [
     {
@@ -108,7 +110,8 @@ export default function LandingPage({ onOpenLogin, onOpenSignup, onDemoLogin, de
             <ThemeSwitcher />
 
             <button
-              onClick={() => updatePreferences({ language: isHi ? 'en' : 'hi' }, false)}
+              onClick={() => cycleLanguage(false)}
+              title="Switch Language: English / हिन्दी / Hinglish"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold cursor-pointer"
               style={{
                 backgroundColor: 'var(--bg-pill)',
@@ -117,7 +120,7 @@ export default function LandingPage({ onOpenLogin, onOpenSignup, onDemoLogin, de
               }}
             >
               <Globe className="h-3.5 w-3.5" style={{ color: 'var(--brand-accent)' }} />
-              <span>{isHi ? 'English' : 'हिन्दी'}</span>
+              <span>{langLabel}</span>
             </button>
 
             <button

@@ -351,7 +351,7 @@ class SQLiteStorage(StorageBackend):
     def update_preferences(self, user_id: str, prefs: Dict[str, Any]) -> Dict[str, Any]:
         current = self.get_preferences(user_id)
         lang = prefs.get("language", current["language"])
-        if lang not in {"en", "hi"}:
+        if lang not in {"en", "hi", "hinglish"}:
             lang = "en"
         font_size = prefs.get("font_size", current["font_size"])
         if font_size not in {"normal", "large", "xlarge"}:

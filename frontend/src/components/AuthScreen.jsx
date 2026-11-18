@@ -6,8 +6,9 @@ import ThemeSwitcher from './ThemeSwitcher';
 
 export default function AuthScreen({ initialMode = 'login', onBack }) {
   const { login, register, demoLogin } = useAuth();
-  const { language, t, updatePreferences } = useSettings();
+  const { language, t, cycleLanguage } = useSettings();
   const isHi = language === 'hi';
+  const langLabel = isHi ? 'हिन्दी' : language === 'hinglish' ? 'Hinglish' : 'English';
 
   const [mode, setMode] = useState(initialMode);
   const [name, setName] = useState('');
@@ -84,12 +85,13 @@ export default function AuthScreen({ initialMode = 'login', onBack }) {
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
           <button
-            onClick={() => updatePreferences({ language: isHi ? 'en' : 'hi' }, false)}
+            onClick={() => cycleLanguage(false)}
+            title="Switch Language: English / हिन्दी / Hinglish"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white text-teal-800 text-xs font-semibold hover:bg-teal-50 cursor-pointer"
             style={{ borderColor: 'var(--border-strong)' }}
           >
             <Globe className="h-3.5 w-3.5" />
-            <span>{isHi ? 'English' : 'हिन्दी'}</span>
+            <span>{langLabel}</span>
           </button>
         </div>
       </header>

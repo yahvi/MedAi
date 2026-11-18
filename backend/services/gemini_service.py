@@ -413,6 +413,7 @@ def _build_demo_chat_reply(
 ) -> str:
     msg_low = message.lower()
     is_hi = language == "hi"
+    is_hinglish = language == "hinglish"
 
     # Check if user asks about a specific test in attached report
     if report:
@@ -429,6 +430,15 @@ def _build_demo_chat_reply(
                         "मैं आपको सलाह दूँगा कि अगले परामर्श में अपने डॉक्टर से पूछें कि क्या इसके लिए किसी अतिरिक्त जांच या जीवनशैली बदलाव की आवश्यकता है। "
                         "*(डेमो मोड: लाइव AI उत्तरों के लिए `backend/.env` में `GEMINI_API_KEY` जोड़ें।)*"
                     )
+                if is_hinglish:
+                    return (
+                        f"Aapki attached report (**{report.get('title')}**) ke hisaab se, aapka **{t.get('test_name')}** "
+                        f"**{t.get('result')} {t.get('unit', '')}** hai (Normal range: {t.get('normal_range', 'N/A')}, "
+                        f"Status: **{t.get('status')}**).\n\n"
+                        f"{t.get('explanation_en')}\n\n"
+                        "Apni next doctor visit mein zaroor poochein ki kya is value ke liye koi follow-up test ya lifestyle change zaroori hai. "
+                        "*(Demo Mode — live Gemini 3.8 Flash ke liye `backend/.env` mein `GEMINI_API_KEY` set karein.)*"
+                    )
                 return (
                     f"Based on your attached report (**{report.get('title')}**), your **{t.get('test_name')}** result is "
                     f"**{t.get('result')} {t.get('unit', '')}** (Reference range: {t.get('normal_range', 'N/A')}, "
@@ -438,7 +448,7 @@ def _build_demo_chat_reply(
                     "*(Demo Mode — add `GEMINI_API_KEY` in `backend/.env` for live Gemini 3.8 Flash responses.)*"
                 )
 
-        if any(k in msg_low for k in ["report", "summary", "explain", "attention", "रिपोर्ट", "सारांश", "समझा"]):
+        if any(k in msg_low for k in ["report", "summary", "explain", "attention", "samjha", "batao", "रिपोर्ट", "सारांश", "समझा"]):
             analysis = report.get("analysis") or {}
             if is_hi:
                 pts = "\n".join(f"• {p}" for p in analysis.get("attention_points_hi", []))
@@ -447,6 +457,14 @@ def _build_demo_chat_reply(
                     f"{analysis.get('summary_hi', '')}\n\n"
                     f"**ध्यान देने योग्य बिंदु:**\n{pts or '• कोई असामान्य बिंदु नहीं मिला।'}\n\n"
                     "कृपया किसी भी दवाई में बदलाव से पहले हमेशा अपने डॉक्टर से सलाह लें। *(डेमो मोड)*"
+                )
+            if is_hinglish:
+                pts = "\n".join(f"• {p}" for p in analysis.get("attention_points_en", []))
+                return (
+                    f"**{report.get('title')}** ka simple overview:\n\n"
+                    f"{analysis.get('summary_en', '')}\n\n"
+                    f"**Jin values par dhyan dena hai:**\n{pts or '• Sab values normal range mein hain.'}\n\n"
+                    "Koi bhi dawai ya treatment change karne se pehle hamesha apne doctor se consult karein. *(Demo Mode)*"
                 )
             pts = "\n".join(f"• {p}" for p in analysis.get("attention_points_en", []))
             return (
@@ -462,6 +480,14 @@ def _build_demo_chat_reply(
             "मैं आपकी लैब रिपोर्ट के मानों, मेडिकल शब्दों और डॉक्टर से पूछे जाने वाले प्रश्नों को आसान भाषा में समझने में आपकी मदद कर सकता हूँ।\n\n"
             "आप ऊपर अपनी कोई अपलोड की गई रिपोर्ट चुन सकते हैं और किसी भी टेस्ट (जैसे *हीमोग्लोबिन*, *ग्लूकोज़*, *HbA1c* या *विटामिन D*) के बारे में पूछ सकते हैं।\n\n"
             "*(नोट: मैं बीमारी का निदान नहीं करता या दवाई नहीं लिखता। लाइव Gemini 3.8 Flash चैट के लिए `backend/.env` में `GEMINI_API_KEY` जोड़ें।)*"
+        )
+
+    if is_hinglish:
+        return (
+            "Namaste! Main **Dr. Sehat** hoon — aapka MedAi medical information assistant. "
+            "Main aapki lab reports, medical terms aur doctor visit ke questions ko bilkul simple Hinglish mein samjhane mein help kar sakta hoon.\n\n"
+            "Aap upar apni koi uploaded report select karein aur kisi bhi test (jaise *Hemoglobin*, *Glucose*, *HbA1c* ya *Vitamin D*) ke baare mein pooch sakte hain!\n\n"
+            "*(Note: Main sirf educational info deta hoon — diagnosis ya prescription nahi karta.)*"
         )
 
     return (
@@ -487,7 +513,12 @@ def chat_with_dr_sehat(
     Uses stateful `previous_interaction_id` when available and re-specifies
     `system_instruction` on every turn per Interactions API best practices.
     """
-    lang_label = "Hindi (natural Devanagari script)" if language == "hi" else "English"
+    if language == "hi":
+        lang_label = "Hindi (natural Devanagari script)"
+    elif language == "hinglish":
+        lang_label = "Hinglish (warm, natural conversational Hindi written in English/Roman script, keeping standard medical terms clear)"
+    else:
+        lang_label = "English"
 
     if not is_gemini_configured():
         return {

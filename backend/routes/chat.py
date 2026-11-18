@@ -56,7 +56,7 @@ def send_message(session_id: str):
     body = request.get_json(silent=True) or {}
     content = (body.get("message") or "").strip()
     language = body.get("language", "en")
-    if language not in {"en", "hi"}:
+    if language not in {"en", "hi", "hinglish"}:
         language = "en"
     report_id_override = body.get("report_id")
 

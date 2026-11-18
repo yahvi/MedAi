@@ -97,6 +97,10 @@ def send_message(session_id: str):
     except Exception as exc:
         return jsonify({"error": f"Dr. Sehat could not respond right now: {exc}"}), 500
 
+    # Guard against session deleted by the user while the AI response was in flight
+    if not store.get_chat_session(user_id, session_id):
+        return jsonify({"error": "Chat session was deleted."}), 404
+
     assistant_msg = store.add_chat_message(
         user_id=user_id,
         session_id=session_id,

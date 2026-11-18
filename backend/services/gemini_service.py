@@ -96,14 +96,14 @@ def _get_client():
     return genai.Client(api_key=Config.GEMINI_API_KEY)
 
 
-FALLBACK_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
+FALLBACK_MODELS = ["gemini-3.1-flash-lite", "gemini-3.8-flash"]
 _MODEL_COOLDOWN_UNTIL: Dict[str, float] = {}
 
 
 def create_interaction_with_fallback(**kwargs: Any) -> Any:
     """
     Calls client.interactions.create with Config.GEMINI_MODEL first, and automatically
-    falls back to current high-availability Flash-Lite models on temporary 503/429 spikes.
+    falls back to current high-availability Gemini models on temporary 503/429 spikes.
     Caches a short cooldown for rate-limited models so subsequent requests respond immediately.
     """
     client = _get_client()
@@ -118,6 +118,7 @@ def create_interaction_with_fallback(**kwargs: Any) -> Any:
     for idx, model_name in enumerate(candidates):
         call_kwargs = dict(kwargs)
         call_kwargs["model"] = model_name
+        call_kwargs.setdefault("timeout", 25.0)
         # previous_interaction_id may be tied to the prior model; drop if switched off primary
         if model_name != primary:
             call_kwargs.pop("previous_interaction_id", None)
@@ -593,10 +594,18 @@ def chat_with_dr_sehat(
         transcript_lines.append(f"Patient: {message}")
         kwargs["input"] = "\n".join(transcript_lines)
 
-    interaction = create_interaction_with_fallback(**kwargs)
-    return {
-        "reply": interaction.output_text or "",
-        "interaction_id": getattr(interaction, "id", None),
-        "ai_mode": "live-gemini",
-    }
+    try:
+        interaction = create_interaction_with_fallback(**kwargs)
+        return {
+            "reply": interaction.output_text or "",
+            "interaction_id": getattr(interaction, "id", None),
+            "ai_mode": "live-gemini",
+        }
+    except Exception as exc:
+        print(f"[MedAi] All Gemini chat models unavailable ({exc}); using safe local fallback reply.")
+        return {
+            "reply": _build_demo_chat_reply(message, language, report),
+            "interaction_id": None,
+            "ai_mode": "demo-fallback",
+        }
 

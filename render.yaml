@@ -15,7 +15,7 @@ services:
       - key: FLASK_SECRET_KEY
         generateValue: true
       - key: GEMINI_MODEL
-        value: gemini-3.8-flash
+        value: gemini-3.5-flash-lite
       - key: ALLOW_VERCEL_ORIGINS
         value: "true"
       - key: GEMINI_API_KEY

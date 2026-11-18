@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -53,6 +53,11 @@ export default function ComparisonPage({ reports, comparisons, onRefreshData }) 
   const [activeComparison, setActiveComparison] = useState(comparisons?.[0] || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!latestId && reports?.[0]?.id) setLatestId(reports[0].id);
+    if (!prevId && reports?.[1]?.id) setPrevId(reports[1].id);
+  }, [reports, latestId, prevId]);
 
   const handleCompare = async () => {
     setError('');

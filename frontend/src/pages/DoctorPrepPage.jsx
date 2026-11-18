@@ -75,6 +75,12 @@ export default function DoctorPrepPage({ reports, doctorPreps, onRefreshData }) 
     }
   }, [doctorPreps, activePrep]);
 
+  useEffect(() => {
+    if (!reportId && reports?.[0]?.id) {
+      setReportId(reports[0].id);
+    }
+  }, [reports, reportId]);
+
   const loadSavedDoctors = async () => {
     try {
       const res = await api.listSavedDoctors();

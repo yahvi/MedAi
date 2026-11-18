@@ -70,6 +70,7 @@ export default function ChatPage({
 
   const recognitionRef = useRef(null);
   const bottomRef = useRef(null);
+  const skipNextFetchRef = useRef(false);
 
   useEffect(() => {
     if (initialPrompt) {
@@ -95,6 +96,10 @@ export default function ChatPage({
   useEffect(() => {
     if (!activeSessionId) {
       setMessages([]);
+      return;
+    }
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
       return;
     }
     api
@@ -139,6 +144,7 @@ export default function ChatPage({
     setSending(true);
     setInput('');
 
+    const tempId = `temp-${Date.now()}`;
     try {
       let sid = activeSessionId;
       if (!sid) {
@@ -147,11 +153,11 @@ export default function ChatPage({
           report_id: attachedReportId || null,
         });
         sid = created.session.id;
+        skipNextFetchRef.current = true;
         setActiveSessionId(sid);
       }
 
       // Optimistic user bubble
-      const tempId = `temp-${Date.now()}`;
       setMessages((prev) => [
         ...prev,
         { id: tempId, role: 'user', content: text, language },
@@ -176,6 +182,8 @@ export default function ChatPage({
 
       await onRefreshData();
     } catch (err) {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setInput(text);
       setError(err.message || 'Could not reach Dr. Sehat.');
     } finally {
       setSending(false);

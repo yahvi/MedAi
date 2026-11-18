@@ -41,6 +41,12 @@ export default function LifestylePage({ reports, lifestylePlans, onRefreshData }
     }
   }, [lifestylePlans, activePlan]);
 
+  useEffect(() => {
+    if (!reportId && reports?.[0]?.id) {
+      setReportId(reports[0].id);
+    }
+  }, [reports, reportId]);
+
   const handleGenerate = async (e) => {
     e.preventDefault();
     setError('');

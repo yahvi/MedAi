@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -96,44 +97,45 @@ def _get_client():
 
 
 FALLBACK_MODELS = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
+_MODEL_COOLDOWN_UNTIL: Dict[str, float] = {}
 
 
 def create_interaction_with_fallback(**kwargs: Any) -> Any:
     """
     Calls client.interactions.create with Config.GEMINI_MODEL first, and automatically
-    falls back to current high-availability Flash-Lite models on temporary 503/429 demand spikes.
+    falls back to current high-availability Flash-Lite models on temporary 503/429 spikes.
+    Caches a short cooldown for rate-limited models so subsequent requests respond immediately.
     """
     client = _get_client()
     primary = kwargs.pop("model", None) or Config.GEMINI_MODEL
-    candidates = [primary] + [m for m in FALLBACK_MODELS if m != primary]
+    all_candidates = [primary] + [m for m in FALLBACK_MODELS if m != primary]
+
+    now = time.time()
+    ready = [m for m in all_candidates if _MODEL_COOLDOWN_UNTIL.get(m, 0) <= now]
+    candidates = ready if ready else all_candidates
 
     last_exc: Optional[Exception] = None
     for idx, model_name in enumerate(candidates):
         call_kwargs = dict(kwargs)
         call_kwargs["model"] = model_name
-        # previous_interaction_id may be tied to the prior model; drop on fallback switch
-        if idx > 0:
+        # previous_interaction_id may be tied to the prior model; drop if switched off primary
+        if model_name != primary:
             call_kwargs.pop("previous_interaction_id", None)
         try:
             return client.interactions.create(**call_kwargs)
         except Exception as exc:
             msg = str(exc).lower()
-            transient = any(
-                k in msg
-                for k in (
-                    "503",
-                    "429",
-                    "high demand",
-                    "service_unavailable",
-                    "unavailable",
-                    "overloaded",
-                    "resource_exhausted",
-                )
-            )
+            is_quota = any(k in msg for k in ("429", "too_many_requests", "rate limit", "resource_exhausted"))
+            is_busy = any(k in msg for k in ("503", "high demand", "service_unavailable", "unavailable", "overloaded"))
+            transient = is_quota or is_busy
+            if is_quota:
+                _MODEL_COOLDOWN_UNTIL[model_name] = time.time() + 600  # 10 min cooldown
+            elif is_busy:
+                _MODEL_COOLDOWN_UNTIL[model_name] = time.time() + 120  # 2 min cooldown
             last_exc = exc
             if not transient or idx == len(candidates) - 1:
                 raise
-            print(f"[MedAi] {model_name} busy ({exc}); falling back to {candidates[idx + 1]}...")
+            print(f"[MedAi] {model_name} busy/rate-limited; falling back to {candidates[idx + 1]}...")
     raise last_exc  # type: ignore[misc]
 
 

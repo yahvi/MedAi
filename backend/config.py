@@ -9,13 +9,11 @@ load_dotenv(BASE_DIR / ".env")
 class Config:
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "medai-dev-secret-key-change-in-prod")
     PORT = int(os.getenv("PORT", "5000"))
-    CORS_ORIGINS = [
-        o.strip()
-        for o in os.getenv(
-            "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
-        ).split(",")
-        if o.strip()
-    ]
+    CORS_ORIGINS_RAW = os.getenv(
+        "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+    ).strip()
+    CORS_ORIGINS = [o.strip().rstrip("/") for o in CORS_ORIGINS_RAW.split(",") if o.strip()]
+    ALLOW_VERCEL_ORIGINS = os.getenv("ALLOW_VERCEL_ORIGINS", "true").lower() == "true"
 
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
     GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
@@ -23,9 +21,9 @@ class Config:
     FIREBASE_CREDENTIALS_PATH = os.getenv("FIREBASE_CREDENTIALS_PATH", "").strip()
     FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET", "").strip()
 
-    DATA_DIR = BASE_DIR / "data"
-    UPLOAD_DIR = BASE_DIR / "uploads"
-    SQLITE_PATH = DATA_DIR / "medai.db"
+    DATA_DIR = Path(os.getenv("MEDAI_DATA_DIR", str(BASE_DIR / "data")))
+    UPLOAD_DIR = Path(os.getenv("MEDAI_UPLOAD_DIR", str(BASE_DIR / "uploads")))
+    SQLITE_PATH = Path(os.getenv("SQLITE_PATH", str(DATA_DIR / "medai.db")))
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload
 
     ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}

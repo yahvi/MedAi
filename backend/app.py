@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from flask import Flask, jsonify
 from flask_cors import CORS
 
@@ -22,10 +23,18 @@ def create_app() -> Flask:
     app.config["SECRET_KEY"] = Config.SECRET_KEY
     app.config["MAX_CONTENT_LENGTH"] = Config.MAX_CONTENT_LENGTH
 
+    if "*" in Config.CORS_ORIGINS:
+        cors_origins = "*"
+    else:
+        cors_origins = list(Config.CORS_ORIGINS)
+        if Config.ALLOW_VERCEL_ORIGINS:
+            cors_origins.append(re.compile(r"^https://.*\.vercel\.app$"))
+
     CORS(
         app,
-        resources={r"/api/*": {"origins": Config.CORS_ORIGINS}},
-        supports_credentials=True,
+        resources={r"/api/*": {"origins": cors_origins}},
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
 
     # Initialize storage backend on startup
@@ -40,6 +49,16 @@ def create_app() -> Flask:
     app.register_blueprint(lifestyle_bp)
     app.register_blueprint(dictionary_bp)
     app.register_blueprint(doctor_prep_bp)
+
+    @app.get("/")
+    def index():
+        return jsonify(
+            {
+                "app": "MedAi API",
+                "status": "running",
+                "health_endpoint": "/api/health",
+            }
+        )
 
     @app.get("/api/health")
     def health():

@@ -1,0 +1,27 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+backend/data/
+backend/uploads/
+backend/.env
+*.db
+*.sqlite3
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Secrets / Firebase
+*firebase-adminsdk*.json
+serviceAccountKey.json
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

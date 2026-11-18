@@ -1,0 +1,2 @@
+# MedAi Flask Blueprints
+

@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@theme {
+  /* Default tokens (overridden dynamically by html[data-theme=...]) */
+  --color-teal-50: #F4F5FD;
+  --color-teal-100: #E9E8F8;
+  --color-teal-200: #CFE0FA;
+  --color-teal-300: #A9C7F5;
+  --color-teal-400: #8DB9F0;
+  --color-teal-500: #6B9CE8;
+  --color-teal-600: #557AD4;
+  --color-teal-700: #463F6E;
+  --color-teal-800: #352F57;
+  --color-teal-900: #262340;
+  --color-teal-950: #19162B;
+}
+
+/* =========================================================
+   THEME 1: Powder Blue (#8DB9F0) + Soft Lavender White (#E9E8F8) + Warm Sunset Peach (#F5B69E)
+   ========================================================= */
+:root,
+html[data-theme="lavender-blue"] {
+  --bg-canvas: #E9E8F8;
+  --bg-surface: #F8F8FE;
+  --bg-surface-strong: #FFFFFF;
+  --bg-header: rgba(248, 248, 254, 0.88);
+  --bg-pill: #FFFFFF;
+  --border-soft: rgba(141, 185, 240, 0.45);
+  --border-strong: rgba(70, 63, 110, 0.25);
+
+  --brand-primary: #463F6E;
+  --brand-primary-hover: #322C52;
+  --brand-accent: #8DB9F0;
+  --brand-warm: #F5B69E;
+  --brand-warm-soft: #FDECE5;
+
+  --text-ink: #24203F;
+  --text-muted: #585478;
+  --text-on-primary: #F8F8FE;
+
+  --hero-gradient: linear-gradient(135deg, #8DB9F0 0%, #B8CCF7 52%, #F5B69E 100%);
+  --dashboard-banner: linear-gradient(125deg, #463F6E 0%, #5D6EA8 55%, #8DB9F0 100%);
+
+  --color-teal-50: #F3F4FC;
+  --color-teal-100: #E9E8F8;
+  --color-teal-200: #C8DCF9;
+  --color-teal-300: #A5C6F5;
+  --color-teal-400: #8DB9F0;
+  --color-teal-500: #6B9CE8;
+  --color-teal-600: #556FA8;
+  --color-teal-700: #463F6E;
+  --color-teal-800: #352F57;
+  --color-teal-900: #24203F;
+  --color-teal-950: #171429;
+}
+
+/* =========================================================
+   THEME 2: Pale Sage Ivory (#E5E8CE) + Muted Forest Sage (#789575)
+   ========================================================= */
+html[data-theme="sage-ivory"] {
+  --bg-canvas: #E5E8CE;
+  --bg-surface: #F6F7EE;
+  --bg-surface-strong: #FFFFFF;
+  --bg-header: rgba(246, 247, 238, 0.90);
+  --bg-pill: #F6F7EE;
+  --border-soft: rgba(120, 149, 117, 0.32);
+  --border-strong: rgba(56, 79, 55, 0.30);
+
+  --brand-primary: #384F37;
+  --brand-primary-hover: #273A26;
+  --brand-accent: #789575;
+  --brand-warm: #B1C2A6;
+  --brand-warm-soft: #EEF1DF;
+
+  --text-ink: #233223;
+  --text-muted: #4A5E49;
+  --text-on-primary: #F6F7EE;
+
+  --hero-gradient: linear-gradient(135deg, #E5E8CE 0%, #ECEFD9 55%, #DDE4C8 100%);
+  --dashboard-banner: linear-gradient(125deg, #384F37 0%, #557353 55%, #789575 100%);
+
+  --color-teal-50: #F3F5E9;
+  --color-teal-100: #E5E8CE;
+  --color-teal-200: #CFD8B9;
+  --color-teal-300: #B1C2A6;
+  --color-teal-400: #93AD8E;
+  --color-teal-500: #789575;
+  --color-teal-600: #607E5D;
+  --color-teal-700: #4B6749;
+  --color-teal-800: #384F37;
+  --color-teal-900: #273A26;
+  --color-teal-950: #1A281A;
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-ink);
+    transition: background-color 220ms ease, color 220ms ease;
+  }
+}
+
+/* Accessibility font scale classes toggled on <html> */
+html.font-scale-normal {
+  font-size: 16px;
+}
+html.font-scale-large {
+  font-size: 18px;
+}
+html.font-scale-xlarge {
+  font-size: 20px;
+}
+
+/* High Contrast accessibility mode */
+html.high-contrast body {
+  background-color: #ffffff;
+  color: #000000;
+}
+html.high-contrast .med-card {
+  border-color: #1A1A2E !important;
+  border-width: 2px !important;
+  box-shadow: none !important;
+}
+html.high-contrast .med-muted {
+  color: #1e293b !important;
+}
